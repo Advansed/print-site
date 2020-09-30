@@ -1,14 +1,12 @@
-import { IonButton, IonCard, IonCardContent, IonCardHeader, IonCol, IonIcon, IonImg, IonInput, IonItem, IonLabel, IonList, IonLoading, IonMenuToggle, IonRouterOutlet, IonRow, IonToolbar } from '@ionic/react';
+import { IonButton, IonCard, IonCardContent, IonCardHeader, IonCol, IonIcon, IonImg, IonInput, IonItem, IonLabel, IonList, IonLoading, IonMenuToggle, IonRouterOutlet, IonRow, IonText, IonToolbar } from '@ionic/react';
 import { arrowBackOutline, folderOpen, folderOutline, folderSharp, image, mailOutline, mailSharp } from 'ionicons/icons';
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { AddressSuggestions } from 'react-dadata';
 import { Plugins, CameraResultType, CameraSource } from '@capacitor/core';
 import { defineCustomElements } from '@ionic/pwa-elements/loader';
 import { socket, Store } from './Store';
 import "./Function.css"
-import TreeViewMenu from 'react-simple-tree-menu'
-import { attachProps } from '@ionic/react/dist/types/components/utils';
-import { setSyntheticLeadingComments } from 'typescript';
+import { withScriptjs, Marker, withGoogleMap, GoogleMap } from 'react-google-maps';
 
 const { Camera, Geolocation }  = Plugins
 
@@ -181,47 +179,80 @@ export function Service(props:{info}):JSX.Element {
     return elem
 }
 
-export function Services():JSX.Element {
-  const [info, setInfo] = useState<any>([]);
+export function Services(props:{info}):JSX.Element {
 
-  useEffect(()=>{
-    console.log("useEffect")
-    setInfo(Store.getState().services)
-  }, [])
-
-
+  let info = props.info;
+  
   function Recurs(props:{info, level}):JSX.Element{
 
     if(props.info === undefined) return <></>
   
-    let info = props.info
-    let elem = <></>;
-    for(let i = 0;i < info.length;i++){
+    let elem = <></>;let item = <></>;
+    for(let i = 0;i < props.info.length;i++){
+      if(props.info[i].jarr === undefined){
+        item = <>
+          <IonItem className={ '' } routerLink={ "" } routerDirection = "none" lines = "none" detail = {false}
+            onClick={()=>{
+              let coords = {
+                latitude: props.info[i].lat,
+                longitude: props.info[i].lng,
+            }
+            console.log("coords")
+            console.log(coords)
+              Store.dispatch({type: "s_coord", s_coord: coords })  
+              console.log(Store.getState().s_coord)
+
+            }}
+          >
+            <IonIcon slot="start" ios={ mailSharp } md={ mailOutline } />
+            <IonLabel>{  props.info[i].name }</IonLabel>
+          </IonItem>
+        </>
+
+      } else {
+        item = <>
+          <IonItem 
+            routerLink={ "/page/Services" } 
+            routerDirection = "none" 
+            lines = "none" 
+            detail = {true}
+            onClick={()=>{
+              //let serv = Store.getState().services;
+              console.log(props.info[i].name + " : " + props.info[i].nest)
+              console.log(props.info[i].nest === "active")
+              if(props.info[i].nest === "active") props.info[i].nest = "hidden"
+              else props.info[i].nest = "active"
+              
+              Store.dispatch({type: "services", services: info})
+
+              let coords = Store.getState().s_coord;
+
+              coords.coords.latitude = props.info[i].lat;
+              coords.coords.longitude = props.info[i].lng;
+
+              Store.dispatch({type: "s_coord", s_coord: coords})
+              console.log("coords")              
+              console.log(Store.getState().s_coord)
+              console.log(coords)
+
+              console.log(info)
+
+            }}
+          >
+            <IonIcon slot="start" ios={ folderSharp } md={ folderOutline } />
+            <IonLabel>{  props.info[i].name }</IonLabel>
+            {/* <IonText>{  props.info[i].lat + " : " + props.info[i].lng }</IonText> */}
+          </IonItem>
+          <ul className = { props.info[i].nest }>
+            <Recurs info = { props.info[i].jarr }  level = { props.level + 1 } /> 
+          </ul>    
+        </>  
+    }
 
       elem = <>
         { elem }
-        <li onClick={()=>{
-          //let serv = Store.getState().services;
-          console.log(info[i].name + " : " + info[i].nest)
-          console.log(info[i].nest === "active")
-          if(info[i].nest === "active") info[i].nest = "hidden"
-          else info[i].nest = "active"
-          
-          Store.dispatch({type: "services", services: info})
-          setInfo(info);
-
-          console.log(info)
-
-        }}>
-          <IonMenuToggle key={ 1 } autoHide={false}>
-            <IonItem className={ '' } routerLink={ "/page/Services"} routerDirection = "none" lines = "none" detail = {true}>
-              <IonIcon slot="start" ios={ folderSharp } md={ folderOutline } />
-              <IonLabel>{  info[i].name }</IonLabel>
-            </IonItem>
-          </IonMenuToggle>
-          <ul className = { info[i].nest }>
-            <Recurs info = { info[i].jarr }  level = { props.level + 1 } /> 
-          </ul>
+        <li>
+          { item }
         </li>
       </>
     }
@@ -234,6 +265,58 @@ export function Services():JSX.Element {
     </ul>
    
   </>;
+
+  return elem;
+}
+
+
+const MyMapComponent = withScriptjs(withGoogleMap((props:any) => {
+  //62.0275204,129.7125726,16.99 62.030322, 129.714982\
+
+    let serv      = props.services //Store.getState().services;
+    let position  = props.position
+    let item = <></>
+    for(let i = 0;i < serv.length; i++){
+      item = <>
+        { item }
+        <Marker position = { { lat: serv[i].lat, lng: serv[i].lng } }  label = { serv[i].name } onClick={()=>{
+          Store.dispatch({type: "params", params: serv[i]});
+        }} />
+      </>
+    }
+
+  return <>
+    <GoogleMap 
+      defaultZoom={ 14 }
+      defaultCenter={{ lat: position.coords.latitude, lng: position.coords.longitude }}
+    >
+      { item }
+    </GoogleMap>
+    </>
+  }
+  ))
+
+export function Map():JSX.Element {
+  const [position, setPosition] = useState<any>(Store.getState().s_coord)
+
+  Store.subscribe({num: 2, type: "s_coord", func: ()=>{
+    setPosition(Store.getState().s_coord);
+    console.log("s_coord")
+    console.log(Store.getState().s_coord)
+  }})
+
+
+  let elem = <>
+      <MyMapComponent
+          isMarkerShown = { true }
+          services = { Store.getState().services }
+          position = { position }
+          googleMapURL="https://maps.googleapis.com/maps/api/js?key=AIzaSyB_p9u6xDi9Jc2ys-BC_u5zaE1J91G0a48&v=3.exp&libraries=geometry,drawing,places"
+          loadingElement={<div style={{ height: `100%` }} />}
+          containerElement={<div style={{ height: `100%` }} />}
+          mapElement={<div style={{ height: `100%` }} />}
+      />
+    </>;
 
   return elem;
 }

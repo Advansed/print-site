@@ -1,10 +1,12 @@
 import {  IonButton, IonContent, IonIcon,  IonItem, IonLabel,  IonList,  IonListHeader,  IonMenu,  IonMenuToggle,  IonNote, IonSearchbar} from '@ionic/react';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useLocation, useHistory } from 'react-router-dom';
 import { addOutline, archiveOutline, archiveSharp, bookmarkOutline, heartOutline, heartSharp, mailOutline, mailSharp, paperPlaneOutline
   , paperPlaneSharp, trashOutline, trashSharp
     , warningOutline, warningSharp } from 'ionicons/icons';
 import './Menu.css';
+import { Services } from './Function';
+import { Store } from './Store';
 
 interface AppPage {
   url: string;
@@ -55,8 +57,19 @@ const appPages: AppPage[] = [
 const labels = ['Family', 'Friends', 'Notes', 'Work', 'Travel', 'Reminders'];
 
 const Menu: React.FC = () => {
+  const [info, setInfo] = useState<any>()
   const location = useLocation();
   const hist = useHistory();
+
+  useEffect(()=>{
+    console.log("useEffect")
+    setInfo(Store.getState().services)
+  }, [])
+
+  Store.subscribe({num: 1, type: "services", func: ()=>{
+    setInfo(Store.getState().services);
+    console.log("services")
+  }})
 
   return (
     <IonMenu contentId="main" type="overlay">
@@ -73,12 +86,7 @@ const Menu: React.FC = () => {
               <IonIcon icon = { addOutline } slot="icon-only" />
             </IonButton>
           </IonItem>
-          <IonMenuToggle key={ 1 } autoHide={false}>
-                <IonItem className={ '' } routerLink={ "/page/Services"} routerDirection="none" lines="none" detail={false}>
-                  <IonIcon slot="start" ios={ mailSharp } md={ mailOutline } />
-                  <IonLabel>{ "Сервисы" }</IonLabel>
-                </IonItem>
-          </IonMenuToggle>
+          <Services info= { info } />
           {/* {appPages.map((appPage, index) => {
             return (
               <IonMenuToggle key={index} autoHide={false}>

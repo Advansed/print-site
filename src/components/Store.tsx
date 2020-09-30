@@ -2,7 +2,7 @@ import { combineReducers  } from 'redux'
 import axios from 'axios'
 import { Reducer } from 'react';
 import  socketIOClient from "socket.io-client"
-import { StoragePluginWeb } from '@capacitor/core';
+import { Geolocation, StoragePluginWeb } from '@capacitor/core';
 
 export var datas = {
     service: {
@@ -16,7 +16,8 @@ export var datas = {
         street: "",
         home: "",
         office: "",
-    }
+    },
+
 }
 
 var reducers: Array<Reducer<any, any>>;reducers = []
@@ -32,6 +33,12 @@ export const i_state = {
         pass:       "",
     },
     services:   [],
+    s_coord: {
+        coords: {
+          latitude:   62.0275204,
+          longitude:  129.7125726,
+        }
+      }
 
 }
 
@@ -88,6 +95,7 @@ const       rootReducer = combineReducers({
     auth:       reducers[0],
     login:      reducers[1],
     services:   reducers[2],
+    s_coord:    reducers[3],
 
 })
 
@@ -126,12 +134,24 @@ function    create_Store(reducer, initialState) {
     };
 }
 
+async function getLocation() {
+    try {
+        const posit = await Geolocation.getCurrentPosition();
+        console.log(posit)
+        Store.dispatch({type: "s_coord", s_coord: posit});
+    } catch (e) {
+        console.log("error getLocation")
+       // setLoading(false);
+    }
+  }
 async function exec(){
     socket.once("method", (data)=>{
         Store.dispatch({type: "services", services: data[0][0].json})
          console.log(data[0][0].json)
     })
     socket.emit("method", { method: "service_tree" })
+
+    getLocation();
 }
 
 export const Store = create_Store(rootReducer, i_state)
