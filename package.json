@@ -4,6 +4,7 @@
   "private": true,
   "dependencies": {
     "@capacitor/core": "2.4.2",
+    "@ionic/pwa-elements": "^3.0.1",
     "@ionic/react": "^5.0.7",
     "@ionic/react-router": "^5.0.7",
     "@testing-library/jest-dom": "^4.2.4",
@@ -15,12 +16,18 @@
     "@types/react-dom": "^16.9.4",
     "@types/react-router": "^5.1.4",
     "@types/react-router-dom": "^5.1.3",
+    "@types/socket.io-client": "^1.4.33",
+    "axios": "^0.20.0",
     "ionicons": "^5.0.0",
     "react": "^16.13.0",
+    "react-dadata": "^2.7.1",
     "react-dom": "^16.13.0",
     "react-router": "^5.1.2",
     "react-router-dom": "^5.1.2",
-    "react-scripts": "3.4.0",
+    "react-scripts": "^3.4.3",
+    "react-simple-tree-menu": "^1.1.18",
+    "redux": "^4.0.5",
+    "socket.io-client": "^2.3.0",
     "typescript": "3.8.3"
   },
   "scripts": {

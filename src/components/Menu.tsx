@@ -1,18 +1,9 @@
-import {
-  IonContent,
-  IonIcon,
-  IonItem,
-  IonLabel,
-  IonList,
-  IonListHeader,
-  IonMenu,
-  IonMenuToggle,
-  IonNote,
-} from '@ionic/react';
-
+import {  IonButton, IonContent, IonIcon,  IonItem, IonLabel,  IonList,  IonListHeader,  IonMenu,  IonMenuToggle,  IonNote, IonSearchbar} from '@ionic/react';
 import React from 'react';
-import { useLocation } from 'react-router-dom';
-import { archiveOutline, archiveSharp, bookmarkOutline, heartOutline, heartSharp, mailOutline, mailSharp, paperPlaneOutline, paperPlaneSharp, trashOutline, trashSharp, warningOutline, warningSharp } from 'ionicons/icons';
+import { useLocation, useHistory } from 'react-router-dom';
+import { addOutline, archiveOutline, archiveSharp, bookmarkOutline, heartOutline, heartSharp, mailOutline, mailSharp, paperPlaneOutline
+  , paperPlaneSharp, trashOutline, trashSharp
+    , warningOutline, warningSharp } from 'ionicons/icons';
 import './Menu.css';
 
 interface AppPage {
@@ -65,6 +56,7 @@ const labels = ['Family', 'Friends', 'Notes', 'Work', 'Travel', 'Reminders'];
 
 const Menu: React.FC = () => {
   const location = useLocation();
+  const hist = useHistory();
 
   return (
     <IonMenu contentId="main" type="overlay">
@@ -72,7 +64,22 @@ const Menu: React.FC = () => {
         <IonList id="inbox-list">
           <IonListHeader>Inbox</IonListHeader>
           <IonNote>hi@ionicframework.com</IonNote>
-          {appPages.map((appPage, index) => {
+
+          <IonItem>
+            <IonSearchbar />
+            <IonButton fill="clear" slot = "end" onClick={()=>{
+              hist.push("/page/Service"); 
+            }}>
+              <IonIcon icon = { addOutline } slot="icon-only" />
+            </IonButton>
+          </IonItem>
+          <IonMenuToggle key={ 1 } autoHide={false}>
+                <IonItem className={ '' } routerLink={ "/page/Services"} routerDirection="none" lines="none" detail={false}>
+                  <IonIcon slot="start" ios={ mailSharp } md={ mailOutline } />
+                  <IonLabel>{ "Сервисы" }</IonLabel>
+                </IonItem>
+          </IonMenuToggle>
+          {/* {appPages.map((appPage, index) => {
             return (
               <IonMenuToggle key={index} autoHide={false}>
                 <IonItem className={location.pathname === appPage.url ? 'selected' : ''} routerLink={appPage.url} routerDirection="none" lines="none" detail={false}>
@@ -81,7 +88,7 @@ const Menu: React.FC = () => {
                 </IonItem>
               </IonMenuToggle>
             );
-          })}
+          })} */}
         </IonList>
 
         <IonList id="labels-list">
