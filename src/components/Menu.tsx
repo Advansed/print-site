@@ -1,4 +1,4 @@
-import {  IonButton, IonContent, IonIcon,  IonItem, IonLabel,  IonList,  IonListHeader,  IonMenu,  IonMenuToggle,  IonNote, IonSearchbar} from '@ionic/react';
+import {  IonButton, IonCheckbox, IonContent, IonIcon,  IonItem, IonLabel,  IonList,  IonListHeader,  IonMenu,  IonMenuToggle,  IonNote, IonSearchbar} from '@ionic/react';
 import React, { useEffect, useState } from 'react';
 import { useLocation, useHistory } from 'react-router-dom';
 import { addOutline, archiveOutline, archiveSharp, bookmarkOutline, heartOutline, heartSharp, mailOutline, mailSharp, paperPlaneOutline
@@ -6,7 +6,7 @@ import { addOutline, archiveOutline, archiveSharp, bookmarkOutline, heartOutline
     , warningOutline, warningSharp } from 'ionicons/icons';
 import './Menu.css';
 import { Services } from './Function';
-import { Store } from './Store';
+import { socket, Store } from './Store';
 
 interface AppPage {
   url: string;
@@ -77,26 +77,26 @@ const Menu: React.FC = () => {
         <IonList id="inbox-list">
           <IonListHeader>Inbox</IonListHeader>
           <IonNote>hi@ionicframework.com</IonNote>
-
           <IonItem>
-            <IonSearchbar />
+            <IonSearchbar debounce={ 500 } onIonChange={(e)=>{
+              console.log(e.detail.value)
+              let param = e.detail.value
+                socket.once("method", (data)=>{
+                    Store.dispatch({type: "services", services: data[0][0].json})
+                })
+                socket.emit("method", {method: "service_tree", param: param})
+            }}/>
             <IonButton fill="clear" slot = "end" onClick={()=>{
               hist.push("/page/Service"); 
             }}>
               <IonIcon icon = { addOutline } slot="icon-only" />
             </IonButton>
           </IonItem>
-          <Services info= { info } />
-          {/* {appPages.map((appPage, index) => {
-            return (
-              <IonMenuToggle key={index} autoHide={false}>
-                <IonItem className={location.pathname === appPage.url ? 'selected' : ''} routerLink={appPage.url} routerDirection="none" lines="none" detail={false}>
-                  <IonIcon slot="start" ios={appPage.iosIcon} md={appPage.mdIcon} />
-                  <IonLabel>{appPage.title}</IonLabel>
-                </IonItem>
-              </IonMenuToggle>
-            );
-          })} */}
+          <IonList onClick={(e) => {
+              hist.push("/page/Services");
+          }}>
+            <Services info= { info }  />
+          </IonList>
         </IonList>
 
         <IonList id="labels-list">

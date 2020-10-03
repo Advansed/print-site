@@ -1,5 +1,5 @@
-import { IonButton, IonCard, IonCardContent, IonCardHeader, IonCol, IonIcon, IonImg, IonInput, IonItem, IonLabel, IonList, IonLoading, IonMenuToggle, IonRouterOutlet, IonRow, IonText, IonToolbar } from '@ionic/react';
-import { arrowBackOutline, folderOpen, folderOutline, folderSharp, image, mailOutline, mailSharp } from 'ionicons/icons';
+import { IonBadge, IonButton, IonCard, IonCardContent, IonCardHeader, IonCheckbox, IonCol, IonIcon, IonImg, IonInput, IonItem, IonLabel, IonList, IonLoading, IonMenuToggle, IonRouterOutlet, IonRow, IonTab, IonTabBar, IonTabButton, IonTabs, IonText, IonToolbar } from '@ionic/react';
+import { arrowBackOutline, calendar, documentOutline, folderOpen, folderOutline, folderSharp, image, informationCircle, mailOutline, mailSharp, map, mapOutline, personCircle } from 'ionicons/icons';
 import React, { useCallback, useEffect, useState } from 'react';
 import { AddressSuggestions } from 'react-dadata';
 import { Plugins, CameraResultType, CameraSource } from '@capacitor/core';
@@ -7,6 +7,8 @@ import { defineCustomElements } from '@ionic/pwa-elements/loader';
 import { socket, Store } from './Store';
 import "./Function.css"
 import { withScriptjs, Marker, withGoogleMap, GoogleMap } from 'react-google-maps';
+import { isPropertyAccessOrQualifiedName } from 'typescript';
+import { IonReactRouter } from '@ionic/react-router';
 
 const { Camera, Geolocation }  = Plugins
 
@@ -35,6 +37,8 @@ export function Service(props:{info}):JSX.Element {
         image:      "",
         franchaise: "",
         address:    "",    
+        country:    "",
+        region:     "",
         state:      "",
         city:       "",
         locality:   "",
@@ -53,8 +57,6 @@ export function Service(props:{info}):JSX.Element {
         let res = await takePicture()
         const img = new Image();
         img.onload = function(data) {
-          console.log("onLoad")
-          console.log(img.width + ":" + img.height)
           let ratio = img.width / 100
           let w = img.width / ratio
           let h = img.height / ratio
@@ -123,19 +125,18 @@ export function Service(props:{info}):JSX.Element {
                             image:      info.image,
                             franchaise: info.franchaise,
                             address:    e.value as string, 
-
-                            state:      e.data.area === null ? "" : e.data.area_with_type as string,
-                            city:       e.data.city === null ? "" : e.data.city_with_type as string,
-                            locality:   e.data.settlement === null ? "" : e.data.settlement_with_type as string,
-                            street:     e.data.street === null ? "" : e.data.street_with_type as string,
-                            home:       e.data.house === null ? "" : e.data.house_type + " " + e.data.house,
-                            flat:       e.data.flat === null ? "" : e.data.flat_type + " " + e.data.flat,
-                            lat:        e.data.geo_lat === null ? 0.00 : parseFloat(e.data.geo_lat),
-                            lng:        e.data.geo_lon === null ? 0.00 : parseFloat(e.data.geo_lon),                        
+                            country:    e.data.country      === null ? "" : e.data.country,  
+                            region:     e.data.region       === null ? "" : e.data.region_with_type as string,
+                            state:      e.data.area         === null ? "" : e.data.area_with_type as string,
+                            city:       e.data.city         === null ? "" : e.data.city_with_type as string,
+                            locality:   e.data.settlement   === null ? "" : e.data.settlement_with_type as string,
+                            street:     e.data.street       === null ? "" : e.data.street_with_type as string,
+                            home:       e.data.house        === null ? "" : e.data.house_type + " " + e.data.house,
+                            flat:       e.data.flat         === null ? "" : e.data.flat_type + " " + e.data.flat,
+                            lat:        e.data.geo_lat      === null ? 0.00 : parseFloat(e.data.geo_lat),
+                            lng:        e.data.geo_lon      === null ? 0.00 : parseFloat(e.data.geo_lon),                        
                             
                         })
-
-                    console.log(e);
                     }
                 }}
                 />
@@ -179,32 +180,54 @@ export function Service(props:{info}):JSX.Element {
     return elem
 }
 
+function CheckAll(info){
+  let checked = info.checked;
+  if(info.jarr !== undefined){
+    let jarr = info.jarr;
+    for(let i = 0;i < jarr.length;i++){
+      jarr[i].checked = checked;
+      if(jarr[i].jarr !== undefined) CheckAll(jarr[i])
+    }
+  }
+}
+
 export function Services(props:{info}):JSX.Element {
+  const [upd, setUpd] = useState(0)
+  
+  Store.subscribe({num: 2, type: "services", func:()=>{
+    setUpd(upd + 1)   
+  }})
+
 
   let info = props.info;
-  
+
   function Recurs(props:{info, level}):JSX.Element{
+    const [checked, setChecked] = useState(false)
 
     if(props.info === undefined) return <></>
+    if(props.info === null) return <></>
   
     let elem = <></>;let item = <></>;
     for(let i = 0;i < props.info.length;i++){
       if(props.info[i].jarr === undefined){
         item = <>
-          <IonItem className={ '' } routerLink={ "" } routerDirection = "none" lines = "none" detail = {false}
+          <IonItem  
+
+            lines = "none" detail = {false}
             onClick={()=>{
               let coords = {
                 latitude: props.info[i].lat,
                 longitude: props.info[i].lng,
             }
-            console.log("coords")
-            console.log(coords)
               Store.dispatch({type: "s_coord", s_coord: coords })  
-              console.log(Store.getState().s_coord)
 
             }}
           >
-            <IonIcon slot="start" ios={ mailSharp } md={ mailOutline } />
+
+            <IonCheckbox slot="start" checked = { props.info[i].checked } onIonChange={()=>{
+              props.info[i].checked = !props.info[i].checked
+              Store.dispatch({type: "services", services: Store.getState().services});
+            }} />
             <IonLabel>{  props.info[i].name }</IonLabel>
           </IonItem>
         </>
@@ -212,36 +235,30 @@ export function Services(props:{info}):JSX.Element {
       } else {
         item = <>
           <IonItem 
-            routerLink={ "/page/Services" } 
-            routerDirection = "none" 
+            // routerLink={ "/page/Services" } 
+            // routerDirection = "none" 
             lines = "none" 
             detail = {true}
             onClick={()=>{
-              //let serv = Store.getState().services;
-              console.log(props.info[i].name + " : " + props.info[i].nest)
-              console.log(props.info[i].nest === "active")
-              if(props.info[i].nest === "active") props.info[i].nest = "hidden"
-              else props.info[i].nest = "active"
-              
-              Store.dispatch({type: "services", services: info})
+
+              Store.dispatch({type: "markers", markers: props.info[i].coords});
 
               let coords = Store.getState().s_coord;
 
-              coords.coords.latitude = props.info[i].lat;
-              coords.coords.longitude = props.info[i].lng;
+              coords.coords.latitude = props.info[i].coords[0].lat as number;
+              coords.coords.longitude = props.info[i].coords[0].lng as number;
 
               Store.dispatch({type: "s_coord", s_coord: coords})
-              console.log("coords")              
-              console.log(Store.getState().s_coord)
-              console.log(coords)
-
-              console.log(info)
 
             }}
           >
-            <IonIcon slot="start" ios={ folderSharp } md={ folderOutline } />
+            <IonCheckbox slot="start" checked = { props.info[i].checked } onIonChange={()=>{
+              props.info[i].checked = !props.info[i].checked
+              CheckAll(props.info[i]);
+              Store.dispatch({type: "services", services: Store.getState().services});
+            }} />
+            {/* <IonIcon slot="start" ios={ folderSharp } md={ folderOutline } /> */}
             <IonLabel>{  props.info[i].name }</IonLabel>
-            {/* <IonText>{  props.info[i].lat + " : " + props.info[i].lng }</IonText> */}
           </IonItem>
           <ul className = { props.info[i].nest }>
             <Recurs info = { props.info[i].jarr }  level = { props.level + 1 } /> 
@@ -269,17 +286,35 @@ export function Services(props:{info}):JSX.Element {
   return elem;
 }
 
-
+function getMarkers(info){
+//  let info = Store.getState().services;
+  let jarr: any; jarr = [];
+  for(let i = 0;i < info.length;i++){
+    if(info[i].jarr === undefined){
+      jarr = [...jarr, info[i]]
+    } else {
+      let jja = getMarkers(info[i].jarr);
+      jarr = [...jarr, ...jja]
+    }
+  }  
+  
+  return jarr
+}
 const MyMapComponent = withScriptjs(withGoogleMap((props:any) => {
   //62.0275204,129.7125726,16.99 62.030322, 129.714982\
 
-    let serv      = props.services //Store.getState().services;
+    console.log("map")
+    console.log(Store.getState().services);
+    let serv      = getMarkers(Store.getState().services);
+    console.log(serv);
     let position  = props.position
+    console.log(position)
     let item = <></>
     for(let i = 0;i < serv.length; i++){
+      if(!serv[i].checked) continue
       item = <>
         { item }
-        <Marker position = { { lat: serv[i].lat, lng: serv[i].lng } }  label = { serv[i].name } onClick={()=>{
+        <Marker position = { { lat: serv[i].coords.lat, lng: serv[i].coords.lng } }  label = { serv[i].coords.name } onClick={()=>{
           Store.dispatch({type: "params", params: serv[i]});
         }} />
       </>
@@ -298,13 +333,15 @@ const MyMapComponent = withScriptjs(withGoogleMap((props:any) => {
 
 export function Map():JSX.Element {
   const [position, setPosition] = useState<any>(Store.getState().s_coord)
+  const [upd, setUpd] = useState(0);
 
-  Store.subscribe({num: 2, type: "s_coord", func: ()=>{
+  Store.subscribe({num: 3, type: "s_coord", func: ()=>{
     setPosition(Store.getState().s_coord);
-    console.log("s_coord")
-    console.log(Store.getState().s_coord)
   }})
 
+  Store.subscribe({num: 4, type: "services", func: ()=>{
+    setUpd(upd + 1);
+  }})
 
   let elem = <>
       <MyMapComponent
@@ -317,6 +354,33 @@ export function Map():JSX.Element {
           mapElement={<div style={{ height: `100%` }} />}
       />
     </>;
+
+  return elem;
+}
+
+export function Main():JSX.Element {
+  const [page, setPage] = useState(0)
+  let elem = <></>
+
+  function Content(){
+    let elem = <></>;
+    switch(page){
+      case 0: return <Map />
+      case 1: return <></>
+      case 2: return <></>
+    }
+    return elem;
+  }
+
+  elem = <>
+    <IonToolbar>
+      <IonButton class="mn-button" fill="clear" onClick={ ()=> setPage(2)}><IonIcon icon={ calendar } ></IonIcon></IonButton>
+      <IonButton class="mn-button" fill="clear" onClick={ ()=> setPage(1)}><IonIcon icon={ documentOutline } ></IonIcon></IonButton>
+      <IonButton class="mn-button" fill="clear" onClick={ ()=> setPage(0)}><IonIcon icon={ mapOutline } ></IonIcon></IonButton>
+    </IonToolbar>
+
+    <Content />
+  </>
 
   return elem;
 }

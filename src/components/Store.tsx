@@ -33,12 +33,13 @@ export const i_state = {
         pass:       "",
     },
     services:   [],
-    s_coord: {
+    s_coord:    {
         coords: {
           latitude:   62.0275204,
           longitude:  129.7125726,
         }
-      }
+    },
+    markers:    []
 
 }
 
@@ -96,6 +97,7 @@ const       rootReducer = combineReducers({
     login:      reducers[1],
     services:   reducers[2],
     s_coord:    reducers[3],
+    markers:    reducers[4],
 
 })
 
@@ -147,9 +149,8 @@ async function getLocation() {
 async function exec(){
     socket.once("method", (data)=>{
         Store.dispatch({type: "services", services: data[0][0].json})
-         console.log(data[0][0].json)
     })
-    socket.emit("method", { method: "service_tree" })
+    socket.emit("method", { method: "service_tree", param: "" })
 
     getLocation();
 }

@@ -10,11 +10,19 @@
     }
 }
 
+/* Сервисы */
 @media all {
 
     /* Remove default bullets */
 ul, #myUL {
     list-style-type: none;
+    margin: 0;
+    padding: 0;
+    padding-left: 20px;
+  }
+
+  li{
+    margin: 0;
   }
   
   /* Remove margins and padding from the parent ul */
@@ -52,4 +60,13 @@ ul, #myUL {
     display: block;
   }
 
+}
+
+/* Main */
+@media all {
+  .mn-button {
+    width: 20%;
+    border: 1px solid gray;
+    border-radius: 8px;
+  }
 }

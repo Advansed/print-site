@@ -4,14 +4,15 @@ import { useHistory } from 'react-router-dom'
 import { useParams } from 'react-router';
 import './Page.css';
 import 'react-dadata/dist/react-dadata.css';
-import { Map, Service, Services } from '../components/Function';
+import { Main, Map, Service, Services } from '../components/Function';
 import { datas } from '../components/Store';
 
 
 
 const jarr = [
   {name: "Service",   title: "Сервис",     JSX: function():  JSX.Element { return <Service info = { datas.service } />}},
-  {name: "Services",   title: "Карта",     JSX: function():  JSX.Element { return <Map />}},
+  {name: "Map",   title: "Карта",     JSX: function():  JSX.Element { return <Map />}},
+  {name: "Main",   title: "Главная",     JSX: function():  JSX.Element { return <Main />}},
 
 ]
 
