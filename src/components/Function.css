@@ -70,3 +70,15 @@ ul, #myUL {
     border-radius: 8px;
   }
 }
+
+
+/* Charts */
+@media all {
+  .chrt-div {
+    height: 30%;
+    /* display: -webkit-flex; */
+    /* display: flex; */
+    /* -webkit-justify-content: flex-end; */
+    /* justify-content: center; */
+  }
+}

@@ -1,4 +1,4 @@
-import { IonBadge, IonButton, IonCard, IonCardContent, IonCardHeader, IonCheckbox, IonCol, IonIcon, IonImg, IonInput, IonItem, IonLabel, IonList, IonLoading, IonMenuToggle, IonRouterOutlet, IonRow, IonTab, IonTabBar, IonTabButton, IonTabs, IonText, IonToolbar } from '@ionic/react';
+import { IonBadge, IonButton, IonCard, IonCardContent, IonCardHeader, IonCardSubtitle, IonCheckbox, IonCol, IonGrid, IonIcon, IonImg, IonInput, IonItem, IonLabel, IonList, IonLoading, IonMenuToggle, IonRouterOutlet, IonRow, IonTab, IonTabBar, IonTabButton, IonTabs, IonText, IonToolbar } from '@ionic/react';
 import { arrowBackOutline, calendar, documentOutline, folderOpen, folderOutline, folderSharp, image, informationCircle, mailOutline, mailSharp, map, mapOutline, personCircle } from 'ionicons/icons';
 import React, { useCallback, useEffect, useState } from 'react';
 import { AddressSuggestions } from 'react-dadata';
@@ -9,6 +9,7 @@ import "./Function.css"
 import { withScriptjs, Marker, withGoogleMap, GoogleMap } from 'react-google-maps';
 import { isPropertyAccessOrQualifiedName } from 'typescript';
 import { IonReactRouter } from '@ionic/react-router';
+import LineChart from './chart';
 
 const { Camera, Geolocation }  = Plugins
 
@@ -358,6 +359,96 @@ export function Map():JSX.Element {
   return elem;
 }
 
+export function Charts():JSX.Element {
+  const [info, setInfo] = useState<any>({
+    year: undefined,
+    month: undefined
+  })
+
+  useEffect(()=>{
+
+    socket.once("method", (data)=>{
+      let jarr = data[0][0]
+      let param = {
+        year: {
+          labels: JSON.parse(jarr.y_labels),
+          datasets: [{
+            label: "График за год",
+            data: JSON.parse(jarr.y_data)
+          }]
+        },
+        month: {
+          labels: JSON.parse(jarr.m_labels),
+          datasets: [
+            {label: "График за месяц", data: JSON.parse(jarr.m_data)}
+          ]
+        },
+      }
+      setInfo(param);
+    })
+
+    socket.emit("method", {
+      method: "charts",
+      date: "2020-09-01"
+    })
+
+  }, [])
+  let elem = <>
+    <div className="chrt-div">
+      <LineChart info = { info.year }/>
+    </div>
+    <div className="chrt-div">
+      <LineChart info = { info.month }/>
+    </div>
+  </>
+  return elem;
+}
+
+export function Docs(): JSX.Element {
+  const [info, setInfo] = useState<any>({jarr: [], summary: 0});
+
+  useEffect(()=>{
+    socket.once("method", (data)=>{
+      setInfo(data[0][0].json)
+      console.log(data[0][0].json)
+    })
+    socket.emit("method", {
+      method: "docs"
+    })
+  },[])
+
+  let elem = <></>
+  let items = info.jarr;
+  for(let i = 0;i < items.length; i++){
+    elem = <>
+      { elem }
+      <IonItem>
+        <IonIcon icon={ documentOutline } slot="start"/>
+        <IonGrid>
+        <IonRow>
+          <IonCol>
+            <IonText> <b> { items[i].Документ} </b> </IonText>
+          </IonCol>
+        </IonRow>
+        <IonRow>
+          <IonCol size="2">
+            <IonText><b>{ items[i].СуммаДокумента }</b></IonText>
+          </IonCol>
+          <IonCol>
+            <IonCardSubtitle> { items[i].Сервис } </IonCardSubtitle>
+          </IonCol>
+          <IonCol>
+            <IonCardSubtitle> { items[i].Пользователь } </IonCardSubtitle>
+          </IonCol>
+        </IonRow>
+        </IonGrid>
+      </IonItem>
+    </>
+  }
+
+  return elem;
+}
+
 export function Main():JSX.Element {
   const [page, setPage] = useState(0)
   let elem = <></>
@@ -366,8 +457,8 @@ export function Main():JSX.Element {
     let elem = <></>;
     switch(page){
       case 0: return <Map />
-      case 1: return <></>
-      case 2: return <></>
+      case 1: return <Charts />
+      case 2: return <Docs />
     }
     return elem;
   }
