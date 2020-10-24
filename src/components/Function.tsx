@@ -1,15 +1,15 @@
-import { IonBadge, IonButton, IonCard, IonCardContent, IonCardHeader, IonCardSubtitle, IonCheckbox, IonCol, IonGrid, IonIcon, IonImg, IonInput, IonItem, IonLabel, IonList, IonLoading, IonMenuToggle, IonRouterOutlet, IonRow, IonTab, IonTabBar, IonTabButton, IonTabs, IonText, IonToolbar } from '@ionic/react';
-import { arrowBackOutline, calendar, documentOutline, folderOpen, folderOutline, folderSharp, image, informationCircle, mailOutline, mailSharp, map, mapOutline, personCircle } from 'ionicons/icons';
-import React, { useCallback, useEffect, useState } from 'react';
+import { IonButton, IonCard, IonCardContent, IonCardHeader, IonCardSubtitle, IonCheckbox, IonCol, IonGrid, IonIcon, IonImg
+    , IonInput, IonItem, IonLabel, IonList, IonLoading, IonRow, IonText, IonToolbar } from '@ionic/react';
+import { arrowBackOutline, calendar, documentOutline, image, imagesOutline, listOutline, mapOutline, personOutline, removeOutline } from 'ionicons/icons';
+import React, { useEffect, useState } from 'react';
 import { AddressSuggestions } from 'react-dadata';
 import { Plugins, CameraResultType, CameraSource } from '@capacitor/core';
 import { defineCustomElements } from '@ionic/pwa-elements/loader';
 import { socket, Store } from './Store';
 import "./Function.css"
 import { withScriptjs, Marker, withGoogleMap, GoogleMap } from 'react-google-maps';
-import { isPropertyAccessOrQualifiedName } from 'typescript';
-import { IonReactRouter } from '@ionic/react-router';
 import LineChart from './chart';
+
 
 const { Camera, Geolocation }  = Plugins
 
@@ -29,8 +29,7 @@ async function    takePicture() {
 
 }
 
-
-export function Service(props:{info}):JSX.Element {
+export function   Service(props:{info}):JSX.Element {
     const [load, setLoad] = useState(false)
     const [info, setInfo] = useState({
         id:         0,
@@ -181,7 +180,7 @@ export function Service(props:{info}):JSX.Element {
     return elem
 }
 
-function CheckAll(info){
+function          CheckAll(info){
   let checked = info.checked;
   if(info.jarr !== undefined){
     let jarr = info.jarr;
@@ -192,7 +191,7 @@ function CheckAll(info){
   }
 }
 
-export function Services(props:{info}):JSX.Element {
+export function   Services(props:{info}):JSX.Element {
   const [upd, setUpd] = useState(0)
   
   Store.subscribe({num: 2, type: "services", func:()=>{
@@ -287,7 +286,7 @@ export function Services(props:{info}):JSX.Element {
   return elem;
 }
 
-function getMarkers(info){
+function          getMarkers(info){
 //  let info = Store.getState().services;
   let jarr: any; jarr = [];
   for(let i = 0;i < info.length;i++){
@@ -301,15 +300,15 @@ function getMarkers(info){
   
   return jarr
 }
+
 const MyMapComponent = withScriptjs(withGoogleMap((props:any) => {
   //62.0275204,129.7125726,16.99 62.030322, 129.714982\
 
-    console.log("map")
-    console.log(Store.getState().services);
+
     let serv      = getMarkers(Store.getState().services);
-    console.log(serv);
+
     let position  = props.position
-    console.log(position)
+
     let item = <></>
     for(let i = 0;i < serv.length; i++){
       if(!serv[i].checked) continue
@@ -332,7 +331,8 @@ const MyMapComponent = withScriptjs(withGoogleMap((props:any) => {
   }
   ))
 
-export function Map():JSX.Element {
+
+export function   Map():JSX.Element {
   const [position, setPosition] = useState<any>(Store.getState().s_coord)
   const [upd, setUpd] = useState(0);
 
@@ -359,15 +359,37 @@ export function Map():JSX.Element {
   return elem;
 }
 
-export function Charts():JSX.Element {
+function          Charts():JSX.Element {
   const [info, setInfo] = useState<any>({
     year: undefined,
     month: undefined
   })
+  const [upd, setUpd] = useState(0);
+
+  let checkeds: any; checkeds = [];
+  
+  function getAll(info){
+
+    for(let i = 0;i < info.length;i++){
+        if(info[i].jarr !== undefined) getAll(info[i].jarr)
+        else {
+          if(info[i].checked)
+          checkeds = [...checkeds, info[i].id]
+        }
+      }
+  }
+
+  Store.subscribe({num: 7, type: "services", func: ()=>{
+    console.log("charts")
+    setUpd(upd + 1);
+  }})
+
 
   useEffect(()=>{
 
-    socket.once("method", (data)=>{
+    getAll(Store.getState().services);
+
+    socket.once("method_charts", (data)=>{
       let jarr = data[0][0]
       let param = {
         year: {
@@ -389,10 +411,11 @@ export function Charts():JSX.Element {
 
     socket.emit("method", {
       method: "charts",
-      date: "2020-09-01"
+      date: "2020-09-01",
+      param: checkeds
     })
 
-  }, [])
+  }, [upd])
   let elem = <>
     <div className="chrt-div">
       <LineChart info = { info.year }/>
@@ -404,21 +427,45 @@ export function Charts():JSX.Element {
   return elem;
 }
 
-export function Docs(): JSX.Element {
+function          Docs(): JSX.Element {
   const [info, setInfo] = useState<any>({jarr: [], summary: 0});
+  const [upd, setUpd] = useState(0);
+
+  let param: any; param = [];
+  
+  function getAll(info){
+
+    for(let i = 0;i < info.length;i++){
+        if(info[i].jarr !== undefined) getAll(info[i].jarr)
+        else {
+          if(info[i].checked)
+            param = [...param, info[i].id]
+        }
+      }
+  }
+
+  Store.subscribe({num: 5, type: "services", func: ()=>{
+    setUpd(upd + 1);
+  }})
 
   useEffect(()=>{
-    socket.once("method", (data)=>{
+
+    getAll(Store.getState().services);
+    socket.once("method_docs", (data)=>{    
       setInfo(data[0][0].json)
-      console.log(data[0][0].json)
     })
     socket.emit("method", {
-      method: "docs"
+      method: "docs",
+      param: param
     })
-  },[])
+  },[upd])
 
   let elem = <></>
+  if(info === null) return <></>
+  if(info === undefined) return <></>
+
   let items = info.jarr;
+
   for(let i = 0;i < items.length; i++){
     elem = <>
       { elem }
@@ -449,25 +496,83 @@ export function Docs(): JSX.Element {
   return elem;
 }
 
-export function Main():JSX.Element {
+function          List():JSX.Element {
+  const [info, setInfo] = useState<any>([])
+
+  useEffect(()=>{
+    socket.once("method_service_list", (data)=>{    
+      console.log(data[0])
+      setInfo(data[0])
+    })
+    socket.emit("method", {
+      method: "service_list",
+    })
+  }, [])
+  
+  function ItemA(props:{info}):JSX.Element {
+    let info = props.info;
+    let elem = <></>
+    if(info.jarr === undefined){
+      elem = <>
+        <IonCard>
+          <IonItem lines="none">
+            <IonIcon icon = { imagesOutline } slot="start" />
+            <IonLabel> { info.name } </IonLabel>
+          </IonItem>
+        </IonCard>
+      </>
+    } else {
+      elem = <>
+        <IonCard>
+          <IonItem lines="none">
+            <IonIcon icon = { personOutline } slot="start" />
+            <IonLabel> { info.franchaiser } </IonLabel>
+          </IonItem>
+        </IonCard>
+      </>
+    }
+
+    return elem;
+  }
+  
+  let elem = <></>
+
+  for(let i = 0;i < info.length;i++){
+    elem = <>
+      { elem }
+      <ItemA info={ info[i].json } />
+    </>
+  }
+
+  elem = <>
+    <div className="mn-div">
+      { elem }
+    </div>
+  </>
+  return elem;
+}
+
+export function   Main():JSX.Element {
   const [page, setPage] = useState(0)
   let elem = <></>
 
   function Content(){
     let elem = <></>;
     switch(page){
-      case 0: return <Map />
-      case 1: return <Charts />
-      case 2: return <Docs />
+      case 0: return <Map     />
+      case 1: return <Charts  />
+      case 2: return <Docs    />
+      case 3: return <List    />
     }
     return elem;
   }
 
   elem = <>
     <IonToolbar>
-      <IonButton class="mn-button" fill="clear" onClick={ ()=> setPage(2)}><IonIcon icon={ calendar } ></IonIcon></IonButton>
-      <IonButton class="mn-button" fill="clear" onClick={ ()=> setPage(1)}><IonIcon icon={ documentOutline } ></IonIcon></IonButton>
       <IonButton class="mn-button" fill="clear" onClick={ ()=> setPage(0)}><IonIcon icon={ mapOutline } ></IonIcon></IonButton>
+      <IonButton class="mn-button" fill="clear" onClick={ ()=> setPage(1)}><IonIcon icon={ documentOutline } ></IonIcon></IonButton>
+      <IonButton class="mn-button" fill="clear" onClick={ ()=> setPage(2)}><IonIcon icon={ calendar } ></IonIcon></IonButton>
+      <IonButton class="mn-button" fill="clear" onClick={ ()=> setPage(3)}><IonIcon icon={ listOutline } ></IonIcon></IonButton>
     </IonToolbar>
 
     <Content />

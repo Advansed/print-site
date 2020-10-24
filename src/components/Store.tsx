@@ -39,7 +39,8 @@ export const i_state = {
           longitude:  129.7125726,
         }
     },
-    markers:    []
+    markers:    [],
+    users:      [],
 
 }
 
@@ -98,6 +99,7 @@ const       rootReducer = combineReducers({
     services:   reducers[2],
     s_coord:    reducers[3],
     markers:    reducers[4],
+    users:      reducers[5],
 
 })
 
@@ -139,20 +141,49 @@ function    create_Store(reducer, initialState) {
 async function getLocation() {
     try {
         const posit = await Geolocation.getCurrentPosition();
-        console.log(posit)
         Store.dispatch({type: "s_coord", s_coord: posit});
     } catch (e) {
         console.log("error getLocation")
        // setLoading(false);
     }
   }
+
+function getAll(info) {
+    let jarr: any; jarr = []
+    info.forEach(elem => {
+        jarr = [...jarr, elem.id]
+    });
+
+    return jarr
+}
+
 async function exec(){
-    socket.once("method", (data)=>{
-        Store.dispatch({type: "services", services: data[0][0].json})
+    console.log("services")
+
+    /////////////////////////franchaisers////////////////////////////////////////////////////
+    socket.once("method_franchaisers", (data) =>{
+        console.log("exec")
+        console.log(data[0][0].json)
+        Store.dispatch({type: "users", users: data[0][0].json})
+
+        let jarr = getAll(data[0][0].json);
+        console.log(jarr)
+        socket.emit("method", { method: "service_tree", param: "", franch: jarr })
+
     })
-    socket.emit("method", { method: "service_tree", param: "" })
+    socket.emit("method", { method: "franchaisers" })
+    /////////////////////////////////////////////////////////////////////////////////////////
+
+    /////////////////////////service_tree////////////////////////////////////////////////////
+    socket.once("method_service_tree", (data)=>{
+        console.log("tree")
+        console.log(data[0][0].json === null ? [] : data[0][0].json)
+        Store.dispatch({type: "services", services: data[0][0].json === null ? [] : data[0][0].json})
+    })
+    ////////////////////////////////////////////////////////////////////////////////////////
 
     getLocation();
+
 }
 
 export const Store = create_Store(rootReducer, i_state)

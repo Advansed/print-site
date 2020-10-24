@@ -69,6 +69,10 @@ ul, #myUL {
     border: 1px solid gray;
     border-radius: 8px;
   }
+
+  .mn-div {
+    width: 40%;
+  }
 }
 
 

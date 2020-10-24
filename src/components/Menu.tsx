@@ -7,6 +7,8 @@ import { addOutline, archiveOutline, archiveSharp, bookmarkOutline, heartOutline
 import './Menu.css';
 import { Services } from './Function';
 import { socket, Store } from './Store';
+import userEvent from '@testing-library/user-event';
+import { isJsxFragment } from 'typescript';
 
 interface AppPage {
   url: string;
@@ -54,22 +56,59 @@ const appPages: AppPage[] = [
   }
 ];
 
-const labels = ['Family', 'Friends', 'Notes', 'Work', 'Travel', 'Reminders'];
-
+var txt = "";
 const Menu: React.FC = () => {
   const [info, setInfo] = useState<any>()
-  const location = useLocation();
+  const [usr, setUsr] = useState<any>([])
+  
   const hist = useHistory();
 
-  useEffect(()=>{
-    console.log("useEffect")
-    setInfo(Store.getState().services)
-  }, [])
-
-  Store.subscribe({num: 1, type: "services", func: ()=>{
+  Store.subscribe({num: 0, type: "services", func: ()=>{
+    console.log("menu -2")
+    console.log(Store.getState().services)
     setInfo(Store.getState().services);
-    console.log("services")
   }})
+  Store.subscribe({num: 1, type: "users", func: ()=>{
+    setUsr(Store.getState().users)
+  }})
+
+  function getFranch(){
+    let jarr: any;jarr =[];
+    for(let i = 0;i < usr.length;i++){
+      if(usr[i].checked)
+        jarr = [...jarr, usr[i].id]
+    }
+    return jarr;
+  }
+
+  function updInfo(){
+    socket.once("method_service_tree", (data)=>{
+       Store.dispatch({type: "services", services: data[0][0].json === null ? [] : data[0][0].json})
+    })
+    socket.emit("method", {
+      method: "service_tree", 
+      param:  txt,
+      franch: getFranch()
+    })    
+  }
+
+  function Usr():JSX.Element {
+    let elem = <></>
+    for(let i = 0;i < usr.length;i++){
+      let label = usr[i];
+        elem = <>
+          { elem }
+          <IonItem lines="none" key={ i }>
+            <IonCheckbox slot="start" checked = { label.checked } onIonChange={()=>{
+              label.checked = !label.checked
+              updInfo();
+            }}/>
+            <IonLabel>{label.fio}</IonLabel>
+          </IonItem>
+        </>
+      }
+    return elem;
+  }
 
   return (
     <IonMenu contentId="main" type="overlay">
@@ -79,12 +118,8 @@ const Menu: React.FC = () => {
           <IonNote>hi@ionicframework.com</IonNote>
           <IonItem>
             <IonSearchbar debounce={ 500 } onIonChange={(e)=>{
-              console.log(e.detail.value)
-              let param = e.detail.value
-                socket.once("method", (data)=>{
-                    Store.dispatch({type: "services", services: data[0][0].json})
-                })
-                socket.emit("method", {method: "service_tree", param: param})
+              txt = e.detail.value as string
+              updInfo();
             }}/>
             <IonButton fill="clear" slot = "end" onClick={()=>{
               hist.push("/page/Service"); 
@@ -92,21 +127,17 @@ const Menu: React.FC = () => {
               <IonIcon icon = { addOutline } slot="icon-only" />
             </IonButton>
           </IonItem>
-          <IonList onClick={(e) => {
-              hist.push("/page/Services");
-          }}>
+          <IonList 
+             id="labels-list"
+          >
+            <IonListHeader>Сервисы</IonListHeader>
             <Services info= { info }  />
           </IonList>
         </IonList>
 
         <IonList id="labels-list">
-          <IonListHeader>Labels</IonListHeader>
-          {labels.map((label, index) => (
-            <IonItem lines="none" key={index}>
-              <IonIcon slot="start" icon={bookmarkOutline} />
-              <IonLabel>{label}</IonLabel>
-            </IonItem>
-          ))}
+          <IonListHeader>Франчайзеры</IonListHeader>
+          <Usr />
         </IonList>
       </IonContent>
     </IonMenu>

@@ -10,9 +10,9 @@ import { datas } from '../components/Store';
 
 
 const jarr = [
-  {name: "Service",   title: "Сервис",     JSX: function():  JSX.Element { return <Service info = { datas.service } />}},
-  {name: "Map",   title: "Карта",     JSX: function():  JSX.Element { return <Map />}},
-  {name: "Main",   title: "Главная",     JSX: function():  JSX.Element { return <Main />}},
+  {name: "Service", title: "Сервис",  JSX: function():  JSX.Element { return <Service info = { datas.service } />}},
+  {name: "Map",     title: "Карта",   JSX: function():  JSX.Element { return <Map />}},
+  {name: "Main",    title: "Главная", JSX: function():  JSX.Element { return <Main />}},
 
 ]
 
