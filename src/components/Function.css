@@ -71,7 +71,26 @@ ul, #myUL {
   }
 
   .mn-div {
-    width: 40%;
+    display: flex;
+    width: 100%;
+    flex-wrap: wrap;
+    
+  }
+
+  .mn-name {
+    font: 20px bold;
+    color: black;
+
+  }
+
+  .mn-card {
+    display: block;
+    max-width: 450px;
+    min-width: 350px;
+  }
+
+  .ll-border {
+    border: 2px double blue;
   }
 }
 

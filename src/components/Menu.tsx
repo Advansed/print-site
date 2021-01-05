@@ -64,8 +64,6 @@ const Menu: React.FC = () => {
   const hist = useHistory();
 
   Store.subscribe({num: 0, type: "services", func: ()=>{
-    console.log("menu -2")
-    console.log(Store.getState().services)
     setInfo(Store.getState().services);
   }})
   Store.subscribe({num: 1, type: "users", func: ()=>{

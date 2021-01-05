@@ -34,8 +34,6 @@ const LineChart: React.FC<ContainerProps> = ({ info }) => {
 
       if(info === undefined) return
 
-      console.log("info");console.log(info);
-
       let n = 0
       info.datasets.forEach(d=> { 
         d.backgroundColor=colors[n].fon

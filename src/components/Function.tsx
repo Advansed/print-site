@@ -1,4 +1,4 @@
-import { IonButton, IonCard, IonCardContent, IonCardHeader, IonCardSubtitle, IonCheckbox, IonCol, IonGrid, IonIcon, IonImg
+import { IonButton, IonCard, IonCardContent, IonCardHeader, IonCardSubtitle, IonCardTitle, IonCheckbox, IonCol, IonGrid, IonIcon, IonImg
     , IonInput, IonItem, IonLabel, IonList, IonLoading, IonRow, IonText, IonToolbar } from '@ionic/react';
 import { arrowBackOutline, calendar, documentOutline, image, imagesOutline, listOutline, mapOutline, personOutline, removeOutline } from 'ionicons/icons';
 import React, { useEffect, useState } from 'react';
@@ -7,8 +7,9 @@ import { Plugins, CameraResultType, CameraSource } from '@capacitor/core';
 import { defineCustomElements } from '@ionic/pwa-elements/loader';
 import { socket, Store } from './Store';
 import "./Function.css"
-import { withScriptjs, Marker, withGoogleMap, GoogleMap } from 'react-google-maps';
+import { withScriptjs, Marker, withGoogleMap, GoogleMap, InfoWindow } from 'react-google-maps';
 import LineChart from './chart';
+import { S_IFDIR } from 'constants';
 
 
 const { Camera, Geolocation }  = Plugins
@@ -380,7 +381,6 @@ function          Charts():JSX.Element {
   }
 
   Store.subscribe({num: 7, type: "services", func: ()=>{
-    console.log("charts")
     setUpd(upd + 1);
   }})
 
@@ -422,6 +422,12 @@ function          Charts():JSX.Element {
     </div>
     <div className="chrt-div">
       <LineChart info = { info.month }/>
+    </div>
+  </>
+
+  elem = <>
+    <div className="mr-3 ml-1">
+      { elem }
     </div>
   </>
   return elem;
@@ -492,43 +498,147 @@ function          Docs(): JSX.Element {
       </IonItem>
     </>
   }
-
+  elem= <>
+    <IonList class= "mr-3 ml-1">
+      { elem }
+    </IonList>
+  </>
   return elem;
 }
 
 function          List():JSX.Element {
-  const [info, setInfo] = useState<any>([])
+  const [info,  setInfo] = useState<any>([])
+  const [upd,   setUpd] = useState(0)
+  const [load, setLoad] = useState(false)
+  const [serv, setServ] = useState<any>({ 
+    id:         0,
+    name:       "",
+    image:      "",
+    franchaise: "",
+    address:    "",    
+    country:    "",
+    region:     "",
+    state:      "",
+    city:       "",
+    locality:   "",
+    street:     "",
+    home:       "",
+    flat:       "",
+    lat:        0,
+    lng:        0,}
+);
+
+  const [fran, setFran] = useState<any>()
+  
+  async function getFoto(){
+    let res = await takePicture()
+    const img = new Image();
+    setLoad(true)
+    img.onload = function(data) {
+      let ratio = img.width / 100
+      let w = img.width / ratio
+      let h = img.height / ratio
+
+      const elem = document.createElement('canvas');
+      elem.width = w;elem.height = h;
+
+      const ctx = elem.getContext('2d');
+
+      ctx?.drawImage(img, 0, 0, 100, 100);
+      serv.image = ctx?.canvas.toDataURL("image/png", 1) as string
+      setLoad(false);
+    }
+    img.src = res;
+
+}
 
   useEffect(()=>{
     socket.once("method_service_list", (data)=>{    
-      console.log(data[0])
       setInfo(data[0])
     })
     socket.emit("method", {
       method: "service_list",
     })
   }, [])
+
+  function unCheckAll(){
+    for(let i = 0; i < info.length;i++){
+      info[i].json.check = false
+      if(info[i].json.jarr !== undefined){
+        for(let j = 0;j < info[i].json.jarr.length;j++){
+          info[i].json.jarr[j].check = false;
+        }
+      }
+    }
+  }
+
+  function getServ(info){
+    socket.once("method_getService", (data)=>{    
+      console.log(data[0][0])
+      setServ(data[0][0])
+    })
+    socket.emit("method", {
+      method: "getService",
+      id: info.id,
+      fr: info.jarr !== undefined ? 1 : 0,
+    })
+  }
   
   function ItemA(props:{info}):JSX.Element {
     let info = props.info;
+    let items = <></>
     let elem = <></>
+
     if(info.jarr === undefined){
       elem = <>
-        <IonCard>
-          <IonItem lines="none">
+        <IonCard 
+          onClick={()=>{
+            unCheckAll();
+            info.check = true;  
+            //setUpd(upd + 1);    
+            getServ(info);
+          }}
+        >
+          <IonItem lines="none" class={ info.check ? "ll-border" : ""}>
             <IonIcon icon = { imagesOutline } slot="start" />
             <IonLabel> { info.name } </IonLabel>
           </IonItem>
         </IonCard>
       </>
     } else {
+      for(let i = 0;i < info.jarr.length;i++){
+        items = <>
+          { items }
+          <IonCard class="ml-2"
+            onClick={()=>{
+              unCheckAll();
+              info.jarr[i].check = true;  
+              getServ(info.jarr[i]);
+              //setUpd(upd + 1);   
+            }}
+          >
+            <IonItem lines="none" class={ info.jarr[i].check ? "ll-border" : ""}>
+              <IonIcon icon = { imagesOutline } slot="start" />
+              <IonLabel> { info.jarr[i].name } </IonLabel>
+            </IonItem>
+          </IonCard>
+        </>
+      }
       elem = <>
-        <IonCard>
-          <IonItem lines="none">
+        <IonCard
+          onClick={()=>{
+            unCheckAll();
+            info.check = true;
+            getServ(info); 
+            //setUpd(upd + 1);   
+          }}
+        >
+          <IonItem lines="none" class={ info.check ? "ll-border" : ""}>
             <IonIcon icon = { personOutline } slot="start" />
             <IonLabel> { info.franchaiser } </IonLabel>
           </IonItem>
         </IonCard>
+        { items }
       </>
     }
 
@@ -544,9 +654,108 @@ function          List():JSX.Element {
     </>
   }
 
+  function Card():JSX.Element{
+    let elem = <></>
+
+   if(serv?.phone === undefined){
+  
+      elem = <>
+        <IonLoading message ="Подождите" isOpen = { load } />
+        <IonCard class = "mn-card">
+          <IonCardHeader> { serv.name } </IonCardHeader>
+          <IonRow>
+            <IonCol size="3">
+              <IonImg src= { serv.image === "" ? personOutline : serv.image } 
+                onClick={()=>{ getFoto()}}
+              />
+            </IonCol>
+            <IonCol size="9">
+              <IonRow>
+                <IonInput 
+                    class = "mn-name"
+                    value = {serv.name } 
+                    placeholder = "Наименование"
+                />
+              </IonRow>
+              <IonRow><IonCardSubtitle>{ "Координаты: "} { serv.lat } { " : "} { serv.lng}</IonCardSubtitle></IonRow>
+            </IonCol>
+          </IonRow>
+          <IonRow>
+            <IonCol>
+              <AddressSuggestions 
+                // ref={suggestionsRef} 
+                token="23de02cd2b41dbb9951f8991a41b808f4398ec6e"
+                // filterLocations ={ dict }
+                //hintText = "г. Якутск"
+                defaultQuery = { serv.address }
+                onChange={(e)=>{
+                    if(e !== undefined){
+                        setServ({
+                            id:         serv.id,
+                            name:       serv.name,
+                            image:      serv.image,
+                            franchaise: serv.franchaise,
+                            address:    e.value as string, 
+                            country:    e.data.country      === null ? "" : e.data.country,  
+                            region:     e.data.region       === null ? "" : e.data.region_with_type as string,
+                            state:      e.data.area         === null ? "" : e.data.area_with_type as string,
+                            city:       e.data.city         === null ? "" : e.data.city_with_type as string,
+                            locality:   e.data.settlement   === null ? "" : e.data.settlement_with_type as string,
+                            street:     e.data.street       === null ? "" : e.data.street_with_type as string,
+                            home:       e.data.house        === null ? "" : e.data.house_type + " " + e.data.house,
+                            flat:       e.data.flat         === null ? "" : e.data.flat_type + " " + e.data.flat,
+                            lat:        e.data.geo_lat      === null ? 0.00 : parseFloat(e.data.geo_lat),
+                            lng:        e.data.geo_lon      === null ? 0.00 : parseFloat(e.data.geo_lon),                        
+                            
+                        })
+                    }
+                }}
+            />      
+            </IonCol>      
+          </IonRow>
+          <IonRow>
+            <IonCol></IonCol>
+            <IonCol>
+              <IonButton
+                expand="block"
+                onClick= {()=>{
+                  serv.method = "s_service";
+                  console.log(serv);
+                  socket.emit("method", serv)  
+                }}
+              >
+                Сохранить
+              </IonButton>
+            </IonCol>
+          </IonRow>
+        </IonCard>
+      </>
+    } else {
+      elem = <>
+        <IonCard class = "mn-card">
+          <IonCardHeader> { serv?.name } </IonCardHeader>
+          <IonRow>
+            <IonCol size="3">
+              <IonImg src= { serv?.image === "" ? personOutline : serv?.image } />
+            </IonCol>
+            <IonCol size="9">
+              <IonRow><IonCardTitle>{ serv?.name }</IonCardTitle></IonRow>
+              <IonRow><IonCardSubtitle> { "Телефон: "} { serv?.phone } </IonCardSubtitle></IonRow>
+            </IonCol>
+          </IonRow>
+        </IonCard>
+      </>
+    }
+  
+    return elem;
+  }
+
   elem = <>
     <div className="mn-div">
-      { elem }
+      <IonCard class = "mn-card">
+        { elem }
+      </IonCard>
+      <Card />
     </div>
   </>
   return elem;

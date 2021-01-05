@@ -158,16 +158,13 @@ function getAll(info) {
 }
 
 async function exec(){
-    console.log("services")
 
     /////////////////////////franchaisers////////////////////////////////////////////////////
     socket.once("method_franchaisers", (data) =>{
-        console.log("exec")
-        console.log(data[0][0].json)
+
         Store.dispatch({type: "users", users: data[0][0].json})
 
         let jarr = getAll(data[0][0].json);
-        console.log(jarr)
         socket.emit("method", { method: "service_tree", param: "", franch: jarr })
 
     })
@@ -176,8 +173,7 @@ async function exec(){
 
     /////////////////////////service_tree////////////////////////////////////////////////////
     socket.once("method_service_tree", (data)=>{
-        console.log("tree")
-        console.log(data[0][0].json === null ? [] : data[0][0].json)
+
         Store.dispatch({type: "services", services: data[0][0].json === null ? [] : data[0][0].json})
     })
     ////////////////////////////////////////////////////////////////////////////////////////
